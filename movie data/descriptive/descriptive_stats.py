@@ -38,7 +38,7 @@ def descriptive_stats(csv_file_path):
 
 
 input_dir = 'movie data\dataset'
-input_file = 'acting_credits.csv'
+input_file = 'weekly_boxoffice.csv'
 input = os.path.join(input_dir, input_file)
 
 output = descriptive_stats(input)
@@ -46,7 +46,7 @@ print(output)
 
 # exporting the summary to a CSV file and put it into ./descriptive_stats
 output_dir = 'movie data\descriptive\descriptive_stats'
-output_name = 'acting_credits.csv'
+output_name = input_file.replace('.csv', '_des.csv')
 output_path = os.path.join(output_dir, output_name)
 
 output.to_csv(output_path, index=True)
