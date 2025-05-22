@@ -3,6 +3,10 @@ import numpy as np
 from scipy.stats import skew, kurtosis
 import os
 
+'''
+執行程式後輸入要做敘述性統計的檔案名稱，程式會自動在 descriptive_stats 資料內建立一份 csv。
+'''
+
 def descriptive_stats(csv_file_path):
     df = pd.read_csv(csv_file_path)
 
@@ -38,7 +42,8 @@ def descriptive_stats(csv_file_path):
 
 
 input_dir = 'movie data\dataset'
-input_file = 'weekly_boxoffice.csv'
+input_ = input() # 用輸的；要加 .csv
+input_file = input_ # 或直接換成檔名
 input = os.path.join(input_dir, input_file)
 
 output = descriptive_stats(input)
