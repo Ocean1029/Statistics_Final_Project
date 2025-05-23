@@ -127,7 +127,29 @@ output_dir_suf = 'movie data\descriptive\plot'
 output_dir = os.path.join(output_dir_suf, input_file.replace('.csv', ''))
 os.makedirs(output_dir, exist_ok=True)
 
-# output = visuals(input, show_plots=False, plot_dir=output_dir)
-output = visuals_intervals(input, plot_dir=output_dir)
+output = visuals(input, show_plots=False, plot_dir=output_dir)
+# output = visuals_intervals(input, plot_dir=output_dir) # 分細一點的 histogram
 # print(output)
 plt.close()
+
+'''
+# 用 movie_summary.csv 裡的 production_budget(y) 跟 production_year(x) 畫 bar chart
+# 以 production_year 為 x，production_budget 平均為 y
+df = pd.read_csv(input)
+year_budget = df.groupby('production_year')['production_budget'].mean().dropna()
+plt.figure(figsize=(10, 5))
+ax = year_budget.plot(kind='bar', color='slateblue')
+plt.title('Average Production Budget by Year')
+plt.xlabel('Production Year')
+plt.ylabel('Average Production Budget')
+plt.tight_layout()
+# 在每根柱子上加上數字
+for p in ax.patches:
+    height = int(p.get_height())
+    if height > 0:
+        ax.annotate(str(height),
+                    (p.get_x() + p.get_width() / 2, height * 0.95),
+                    ha='center', va='bottom', fontsize=7)
+plt.savefig(os.path.join(output_dir, 'production_budget_by_year_bar.png'))
+plt.close()
+'''
