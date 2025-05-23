@@ -77,7 +77,6 @@ def visuals(csv_file_path, show_plots=True, plot_dir=None):
             plt.savefig(os.path.join(plot_dir, f'{column}_bar_chart.png'))
             # plt.show()
 
-
     # Correlation Matrix (numeric only)
     numeric_df = df.select_dtypes(include=[np.number])
     if not numeric_df.empty:
@@ -90,6 +89,34 @@ def visuals(csv_file_path, show_plots=True, plot_dir=None):
 
     return df.describe(include='all')
 
+def visuals_intervals(csv_file_path, plot_dir=None, upper_quantile=0.99, bins_main=30):
+    df = pd.read_csv(csv_file_path)
+    if plot_dir is None:
+        plot_dir = './interval_plots'
+    os.makedirs(plot_dir, exist_ok=True)
+
+    for column in df.select_dtypes(include=[np.number]).columns:
+        clean_data = df[column].dropna()
+        # 去除極大值（只保留前99%數據）
+        threshold = clean_data.quantile(upper_quantile)
+        filtered_data = clean_data[clean_data <= threshold]
+
+        # 畫主要分布區間的 histogram（分更多 bins）
+        plt.figure(figsize=(6, 4))
+        ax = sns.histplot(filtered_data, bins=bins_main, color='dodgerblue', kde=True)
+        plt.title(f'細分主區間 Histogram: {column}')
+        plt.xlabel(column)
+        plt.ylabel('Frequency')
+        plt.tight_layout()
+        # 在每根柱子上加數字
+        for p in ax.patches:
+            height = int(p.get_height())
+            if height > 0:
+                ax.annotate(str(height),
+                            (p.get_x() + p.get_width() / 2, height * 0.85),
+                            ha='center', va='bottom', fontsize=7)
+        plt.savefig(os.path.join(plot_dir, f'{column}_interval_histogram.png'))
+        plt.close()
 
 input_dir = 'movie data\dataset'
 input_ = input() # 用輸的；要加 .csv
@@ -100,6 +127,7 @@ output_dir_suf = 'movie data\descriptive\plot'
 output_dir = os.path.join(output_dir_suf, input_file.replace('.csv', ''))
 os.makedirs(output_dir, exist_ok=True)
 
-output = visuals(input, show_plots=False, plot_dir=output_dir)
+# output = visuals(input, show_plots=False, plot_dir=output_dir)
+output = visuals_intervals(input, plot_dir=output_dir)
 # print(output)
 plt.close()
