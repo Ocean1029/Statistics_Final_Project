@@ -132,7 +132,7 @@ p_value_threshold = 0.05
 step = 1
 while True:
     # Get p-values
-    p_values = model.pvalues
+    p_values = model.pvalues.drop('const')
     # Find the feature with the highest p-value
     max_p_value = p_values.max()
     if max_p_value > p_value_threshold:
