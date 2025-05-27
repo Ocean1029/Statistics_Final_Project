@@ -22,6 +22,17 @@ df = pd.read_csv('movie_summary.csv')
 # Create target variable (total revenue)
 df['total_revenue'] = df['domestic_box_office'] + df['international_box_office']
 
+# Create violin plot for total revenue distribution
+plt.figure(figsize=(15, 8))
+sns.violinplot(x='genre', y='total_revenue', data=df, palette='pastel')
+plt.title('Distribution of Total Revenue by Genre')
+plt.xlabel('Genre')
+plt.ylabel('Total Revenue')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.savefig('revenue_distribution_by_genre.png')
+plt.close()
+
 # Define features
 numeric_features = ['production_budget', 'opening_weekend_revenue']
 categorical_features = ['genre', 'source', 'sequel']
