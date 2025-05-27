@@ -150,3 +150,61 @@ group1 = sms.DescrStatsW(x0.values)
 group2 = sms.DescrStatsW(x1.values)
 t_test = sms.CompareMeans(group1, group2)
 print(t_test.summary(usevar='unequal', alpha=0.05))
+
+# 指定要分析的 genre
+target_genres = ['Romantic', 'Comedy', 'Drama', 'Documentary', 'Horror', 'Thriller/Suspense']
+results = []
+
+# 分析每個 genre
+for genre in target_genres:
+    genre_df = filtered_df[filtered_df['genre'] == genre]
+    if genre_df['sequel'].value_counts().min() < 10:
+        continue  # 若續集或非續集樣本數過少，跳過此類型
+
+    x0 = genre_df[genre_df['sequel'] == 0]['total_box_office']
+    x1 = genre_df[genre_df['sequel'] == 1]['total_box_office']
+
+    # Welch's t-test
+    t_stat, p_val = stats.ttest_ind(x0, x1, equal_var=False)
+
+    # 效果量 Cohen's d
+    pooled_sd = np.sqrt((np.var(x0, ddof=1) + np.var(x1, ddof=1)) / 2)
+    cohen_d = (np.mean(x1) - np.mean(x0)) / pooled_sd
+
+    results.append({
+        'Genre': genre,
+        'Sequel N': len(x1),
+        'Non-Sequel N': len(x0),
+        'Sequel Mean': np.mean(x1),
+        'Non-Sequel Mean': np.mean(x0),
+        'Mean Diff': np.mean(x1) - np.mean(x0),
+        'p-value (Welch)': p_val,
+        "Cohen's d": cohen_d
+    })
+
+results_df = pd.DataFrame(results)
+print(results_df)
+
+# CSV
+results_df.to_csv('sequel_analysis_results.csv', index=False)
+print("\nResults saved to 'sequel_analysis_results.csv'")
+
+# Plotting overlaid KDEs for each genre
+for genre in target_genres:
+    genre_df = filtered_df[filtered_df['genre'] == genre]
+    if genre_df['sequel'].value_counts().min() < 10:
+        continue  # Skip if not enough data
+
+    x0 = np.log1p(genre_df[genre_df['sequel'] == 0]['total_box_office'])
+    x1 = np.log1p(genre_df[genre_df['sequel'] == 1]['total_box_office'])
+
+    plt.figure(figsize=(10, 6))
+    sns.kdeplot(x0, label='Non-Sequel', shade=True, color='skyblue')
+    sns.kdeplot(x1, label='Sequel', shade=True, color='salmon')
+    plt.title(f'Log(1+Box Office) Distribution for {genre}')
+    plt.xlabel('log(1 + total_box_office)')
+    plt.ylabel('Density')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f"distribution_{genre.replace('/', '_')}.png")
+    plt.close()
