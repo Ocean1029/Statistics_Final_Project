@@ -101,53 +101,52 @@ filtered_df = df[
     df['domestic_box_office'].notna() &
     df['international_box_office'].notna()
 ].copy()
+# 計算總票房（可重複確認）
 filtered_df['total_box_office'] = (
     filtered_df['domestic_box_office'] + filtered_df['international_box_office']
 )
 
-# 分組資料
+print(filtered_df['sequel'].value_counts())
+
+plt.figure(figsize=(12, 6))
+sns.stripplot(data=filtered_df, x='sequel', y='production_budget', jitter=True)
+plt.yscale('log')
+plt.title("Production Budget by Sequel")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(12, 6))
+sns.stripplot(data=filtered_df, x='sequel', y='total_box_office', jitter=True)
+plt.yscale('log')
+plt.title("Total Box Office by Sequel")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# 分組
 x0 = filtered_df[filtered_df['sequel'] == 0]['total_box_office']
 x1 = filtered_df[filtered_df['sequel'] == 1]['total_box_office']
 
-# ccc最愛的敘述統計
-print("Filtered Data Description:")
-print(x0[['sequel', 'total_box_office']].describe())
-print(x1[['sequel', 'total_box_office']].describe())
-print("\nSequel and Non-Sequel Movies Count:")
-print(filtered_df['sequel'].value_counts())
+# 顯示基本描述統計
+print("Sequel = 0:")
+print(x0.describe())
+print("\nSequel = 1:")
+print(x1.describe())
 
-# boxplot and violinplot
-plt.figure(figsize=(10, 6))
-sns.boxplot(x='sequel', y='total_box_office', data=filtered_df, palette='pastel')
-plt.title('Boxplot of Sequel and Non-Sequel Movies')
-plt.xlabel('Sequel')
-plt.ylabel('Total Box Office (1 million)')
-plt.show()
+# === 1. F 檢定：變異數是否相等 ===
+print("\n=== F Test: Equality of Variances ===")
+f_result = f_test_variances(x0, x1, sides=2, alpha=0.05)
+print(f_result.round(4))
 
-plt.figure(figsize=(10, 6))
-sns.violinplot(x='sequel', y='total_box_office', data=filtered_df, palette='pastel')
-plt.title('Violinplot of Sequel and Non-Sequel Movies')
-plt.xlabel('Sequel')
-plt.ylabel('Total Box Office (1 million)')
-plt.show()
-
-
-
-# F test
-print("=== F Test: Equality of Variances ===")
-f_test = f_test_variances(x0, x1, sides=2, alpha=0.05)
-print(f_test.round(4))
-
-# Welch's t-test
+# === 2. t 檢定（Welch's）：平均數是否相等 ===
 print("\n=== Welch's t-test: Equality of Means ===")
-t_test = t_test_two_means_unequal_variance(x0, x1, sides=2, alpha=0.05, H0_diff=0)
-print(t_test.round(4))
+t_result = t_test_two_means_unequal_variance(x0, x1, sides=2, alpha=0.05, H0_diff=0)
+print(t_result.round(4))
 
-# Summary 表格
-print("\n=== Summary Table using statsmodels ===")
-df_compare = pd.DataFrame({
-    'value': pd.concat([x0, x1], ignore_index=True),
-    'group': ['Sequel=0'] * len(x0) + ['Sequel=1'] * len(x1)
-})
-pivot_df = df_compare.pivot(columns='group', values='value')
-print(run_t_test_summary(pivot_df, 'Sequel=0', 'Sequel=1', usevar='unequal', alpha=0.05))
+# === 3. t 檢定摘要報告：使用 statsmodels ===
+print("\n=== Summary Report using statsmodels ===")
+group1 = sms.DescrStatsW(x0.values)
+group2 = sms.DescrStatsW(x1.values)
+t_test = sms.CompareMeans(group1, group2)
+print(t_test.summary(usevar='unequal', alpha=0.05))
