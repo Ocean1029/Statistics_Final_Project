@@ -18,7 +18,21 @@ from sklearn.feature_selection import VarianceThreshold
 df = pd.read_csv('movie_summary.csv')
 
 # Filter the dataset to only include movies with a total budget within 20,000,000
-df = df[df['production_budget'] <= 20000000]
+df = df[
+    (df['production_year'] > 2000) &
+    # (df['genre'].isin([
+    #     "Romantic Comedy",
+    #     "Thriller/Suspense",
+    #     "Comedy",
+    #     "Drama"
+    # ])) &
+    (df['production_budget'] > 10000) &
+    (df['production_budget'] < 5000000) &
+    (df['genre'].notna()) &
+    df['domestic_box_office'].notna() &
+    df['international_box_office'].notna() &
+    df['production_budget'].notna()
+].copy()
 
 # Create target variable (total revenue)
 df['total_revenue'] = df['domestic_box_office'] + df['international_box_office']
@@ -81,7 +95,7 @@ y_train = y_train.reset_index(drop=True)
 X_train_processed_df = X_train_processed_df.reset_index(drop=True)
 
 # Remove low-variance features before VIF calculation
-selector = VarianceThreshold(threshold=0.005)
+selector = VarianceThreshold(threshold=0.001)
 X_train_reduced = selector.fit_transform(X_train_processed_df)
 selected_columns = X_train_processed_df.columns[selector.get_support()]
 X_train_processed_df = pd.DataFrame(X_train_reduced, columns=selected_columns)
@@ -175,3 +189,14 @@ plt.title('Actual vs Predicted Total Revenue')
 plt.tight_layout()
 plt.savefig('actual_vs_predicted.png')
 plt.close() 
+
+fitted_vals = model.fittedvalues
+residuals  = model.resid
+
+plt.figure(figsize=(8, 6))
+plt.scatter(fitted_vals, residuals)
+plt.axhline(0, linewidth=1, linestyle='--')  # horizontal zero line
+plt.xlabel('Fitted values (log total box office)')
+plt.ylabel('Residuals')
+plt.title('Residuals vs. Fitted Values')
+plt.show()
